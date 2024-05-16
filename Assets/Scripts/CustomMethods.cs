@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -135,69 +135,101 @@ namespace Ex
             return Mathf.Clamp(self, min, max);
         }
 
+        public static Vector2 Clamp(this Vector2 self, float min, float max)
+        {
+            return new(self.x.Clamp(min, max), self.y.Clamp(min, max));
+        }
+
+        public static Vector3 Clamp(this Vector3 self, float min, float max)
+        {
+            return new(self.x.Clamp(min, max), self.y.Clamp(min, max), self.z.Clamp(min, max));
+        }
+
+        public static Vector2Int Clamp(this Vector2Int self, int min, int max)
+        {
+            return new(self.x.Clamp(min, max), self.y.Clamp(min, max));
+        }
+
+        public static Vector3Int Clamp(this Vector3Int self, int min, int max)
+        {
+            return new(self.x.Clamp(min, max), self.y.Clamp(min, max), self.z.Clamp(min, max));
+        }
+
         public static int ClampFloor(this int self, int min)
         {
-            if (self < min)
-            {
-                return min;
-            }
-            else
-            {
-                return self;
-            }
+            return self < min ? min : self;
         }
 
         public static float ClampFloor(this float self, float min)
         {
-            if (self < min)
-            {
-                return min;
-            }
-            else
-            {
-                return self;
-            }
+            return self < min ? min : self;
+        }
+
+        public static Vector2 ClampFloor(this Vector2 self, float min)
+        {
+            return new(self.x < min ? min : self.x, self.y < min ? min : self.y);
+        }
+
+        public static Vector3 ClampFloor(this Vector3 self, float min)
+        {
+            return new(self.x < min ? min : self.x, self.y < min ? min : self.y, self.z < min ? min : self.z);
+        }
+
+        public static Vector2Int ClampFloor(this Vector2Int self, int min)
+        {
+            return new(self.x < min ? min : self.x, self.y < min ? min : self.y);
+        }
+
+        public static Vector3Int ClampFloor(this Vector3Int self, int min)
+        {
+            return new(self.x < min ? min : self.x, self.y < min ? min : self.y, self.z < min ? min : self.z);
         }
 
         public static int ClampCeil(this int self, int max)
         {
-            if (self > max)
-            {
-                return max;
-            }
-            else
-            {
-                return self;
-            }
+            return self > max ? max : self;
         }
 
         public static float ClampCeil(this float self, float max)
         {
-            if (self > max)
-            {
-                return max;
-            }
-            else
-            {
-                return self;
-            }
+            return self > max ? max : self;
         }
 
-        public static (int, int) DivMod(int a, int b)
+        public static Vector2 ClampCeil(this Vector2 self, float max)
         {
-            int quotient = a / b;
-            int remainder = a % b;
-            return (quotient, remainder);
+            return new(self.x > max ? max : self.x, self.y > max ? max : self.y);
         }
 
-        public static (int, float) DivMod(float a, float b)
+        public static Vector3 ClampCeil(this Vector3 self, float max)
         {
-            int quotient = (int)(a / b);
-            float remainder = a % b;
-            return (quotient, remainder);
+            return new(self.x > max ? max : self.x, self.y > max ? max : self.y, self.z > max ? max : self.z);
         }
 
-        public static (int, int, int) NormalizedTime(this float time)
+        public static Vector2Int ClampCeil(this Vector2Int self, int max)
+        {
+            return new(self.x > max ? max : self.x, self.y > max ? max : self.y);
+        }
+
+        public static Vector3Int ClampCeil(this Vector3Int self, int max)
+        {
+            return new(self.x > max ? max : self.x, self.y > max ? max : self.y, self.z > max ? max : self.z);
+        }
+
+        public static (int q, int r) DivMod(int a, int b)
+        {
+            int q = a / b;
+            int r = a % b;
+            return (q, r);
+        }
+
+        public static (int q, float r) DivMod(float a, float b)
+        {
+            int q = (int)(a / b);
+            float r = a % b;
+            return (q, r);
+        }
+
+        public static (int min, int sec, int thi) NormalizedTime(this float time)
         {
             (int min, float time_) = DivMod(time, 60);
             (int sec, float thi_) = DivMod(time_ * 100, 100);
@@ -218,6 +250,26 @@ namespace Ex
         public static int Rounded2(this float sc)
         {
             return (int)System.Math.Round(sc, 0, MidpointRounding.AwayFromZero);
+        }
+
+        public static float Sum(this Vector2 self)
+        {
+            return self.x + self.y;
+        }
+
+        public static float Sum(this Vector3 self)
+        {
+            return self.x + self.y + self.z;
+        }
+
+        public static int Sum(this Vector2Int self)
+        {
+            return self.x + self.y;
+        }
+
+        public static int Sum(this Vector3Int self)
+        {
+            return self.x + self.y + self.z;
         }
     }
 
@@ -276,83 +328,320 @@ namespace Ex
 
     public static class Collection
     {
-        public static List<int> Range(int stop)
+        public static List<T> ToList<T>(this IEnumerable<T> collection)
         {
-            List<int> ret = new();
+            List<T> ret = new();
+            foreach (T e in collection)
+            {
+                ret.Add(e);
+            }
+            return ret;
+        }
+
+        public static IEnumerable<T> ToIEe<T>(this List<T> collection)
+        {
+            foreach (T e in collection)
+            {
+                yield return e;
+            }
+        }
+
+        public static IEnumerable<int> Range(int stop)
+        {
             for (int i = 0; i < stop; i += 1)
             {
-                ret.Add(i);
+                yield return i;
             }
-            return ret;
         }
 
-        public static List<int> Range(int start, int stop)
+        public static IEnumerable<int> Range(int start, int stop)
         {
-            List<int> ret = new();
             for (int i = start; i < stop; i += 1)
             {
-                ret.Add(i);
+                yield return i;
             }
-            return ret;
         }
 
-        public static List<int> Range(int start, int stop, int step)
+        public static IEnumerable<int> Range(int start, int stop, int step)
         {
             if (step == 0) throw new Exception("InfinityLoop.");
 
-            List<int> ret = new();
             if (step > 0)
             {
                 for (int i = start; i < stop; i += step)
                 {
-                    ret.Add(i);
+                    yield return i;
                 }
             }
             else
             {
                 for (int i = start; i > stop; i += step)
                 {
-                    ret.Add(i);
+                    yield return i;
                 }
             }
-            return ret;
         }
 
-        public static List<(int, T)> Enumerate<T>(List<T> self)
+        public static IEnumerable<(int index, T value)> Enumerate<T>(IEnumerable<T> self)
         {
-            List<(int, T)> ret = new();
+            using (IEnumerator<T> IEr = self.GetEnumerator())
+            {
+                int i = 0;
+                while (IEr.MoveNext())
+                {
+                    i++;
+                    yield return (i, IEr.Current);
+                }
+            }
+        }
+
+        public static IEnumerable<(int index, T value)> Enumerate<T>(List<T> self)
+        {
             for (int i = 0; i < self.Count; i++)
             {
-                ret.Add((i, self[i]));
+                yield return (i, self[i]);
             }
-            return ret;
         }
 
-        public static List<(int, T1, T2)> Enumerate<T1, T2>(Dictionary<T1, T2> self)
+        public static IEnumerable<(int index, T1 key, T2 value)> Enumerate<T1, T2>(Dictionary<T1, T2> self)
         {
-            List<(int, T1, T2)> ret = new();
             int i = 0;
             foreach (KeyValuePair<T1, T2> e in self)
             {
-                ret.Add((i, e.Key, e.Value));
+                yield return (i, e.Key, e.Value);
                 i++;
             }
-            return ret;
         }
 
-        public static List<Vector2Int> Enumerate(int x, int y)
+        public static IEnumerable<Vector2Int> Enumerate(Vector2Int vec)
         {
-            List<Vector2Int> ret = new();
-            x.ClampFloor(0);
-            y.ClampFloor(0);
-            for (int X = 0; X < x; X++)
+            for (int x = 0; x < vec.x; x++)
             {
-                for (int Y = 0; Y < y; Y++)
+                for (int y = 0; y < vec.y; y++)
                 {
-                    ret.Add(new(X, Y));
+                    yield return new(x, y);
                 }
             }
-            return ret;
+        }
+
+        public static IEnumerable<Vector2Int> Enumerate(int _x, int _y)
+        {
+            for (int x = 0; x < _x; x++)
+            {
+                for (int y = 0; y < _y; y++)
+                {
+                    yield return new(x, y);
+                }
+            }
+        }
+
+        public static IEnumerable<Vector2Int> Enumerate((int start, int stop) _x, (int start, int stop) _y)
+        {
+            for (int x = _x.start; x < _x.stop; x++)
+            {
+                for (int y = _y.start; y < _y.stop; y++)
+                {
+                    yield return new(x, y);
+                }
+            }
+        }
+
+        public static IEnumerable<Vector2Int> Enumerate((int start, int stop, int step) _x, (int start, int stop, int step) _y)
+        {
+            if (_x.step == 0 || _y.step == 0) throw new Exception("InfinityLoop.");
+
+            if (_x.step > 0 && _y.step > 0)
+            {
+                for (int x = _x.start; x < _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y < _y.stop; y += _y.step)
+                    {
+                        yield return new(x, y);
+                    }
+                }
+            }
+            else if (_x.step > 0 && _y.step < 0)
+            {
+                for (int x = _x.start; x < _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y > _y.stop; y += _y.step)
+                    {
+                        yield return new(x, y);
+                    }
+                }
+            }
+            else if (_x.step < 0 && _y.step > 0)
+            {
+                for (int x = _x.start; x > _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y < _y.stop; y += _y.step)
+                    {
+                        yield return new(x, y);
+                    }
+                }
+            }
+            else
+            {
+                for (int x = _x.start; x > _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y > _y.stop; y += _y.step)
+                    {
+                        yield return new(x, y);
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable<Vector3Int> Enumerate(Vector3Int vec)
+        {
+            for (int x = 0; x < vec.x; x++)
+            {
+                for (int y = 0; y < vec.y; y++)
+                {
+                    for (int z = 0; z < vec.z; z++)
+                    {
+                        yield return new(x, y, z);
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable<Vector3Int> Enumerate(int _x, int _y, int _z)
+        {
+            for (int x = 0; x < _x; x++)
+            {
+                for (int y = 0; y < _y; y++)
+                {
+                    for (int z = 0; z < _z; z++)
+                    {
+                        yield return new(x, y, z);
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable<Vector3Int> Enumerate((int start, int stop) _x, (int start, int stop) _y, (int start, int stop) _z)
+        {
+            for (int x = _x.start; x < _x.stop; x++)
+            {
+                for (int y = _y.start; y < _y.stop; y++)
+                {
+                    for (int z = _z.start; z < _z.stop; z++)
+                    {
+                        yield return new(x, y, z);
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable<Vector3Int> Enumerate((int start, int stop, int step) _x, (int start, int stop, int step) _y, (int start, int stop, int step) _z)
+        {
+            if (_x.step == 0 || _y.step == 0 || _z.step == 0) throw new Exception("InfinityLoop.");
+
+            if (_x.step > 0 && _y.step > 0 && _z.step > 0)
+            {
+                for (int x = _x.start; x < _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y < _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z < _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
+            else if (_x.step > 0 && _y.step > 0 && _z.step < 0)
+            {
+                for (int x = _x.start; x < _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y < _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z > _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
+            else if (_x.step > 0 && _y.step < 0 && _z.step > 0)
+            {
+                for (int x = _x.start; x < _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y > _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z < _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
+            else if (_x.step > 0 && _y.step < 0 && _z.step < 0)
+            {
+                for (int x = _x.start; x < _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y > _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z > _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
+            else if (_x.step < 0 && _y.step > 0 && _z.step > 0)
+            {
+                for (int x = _x.start; x > _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y < _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z < _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
+            else if (_x.step < 0 && _y.step > 0 && _z.step < 0)
+            {
+                for (int x = _x.start; x > _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y < _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z > _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
+            else if (_x.step < 0 && _y.step < 0 && _z.step > 0)
+            {
+                for (int x = _x.start; x > _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y > _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z < _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int x = _x.start; x > _x.stop; x += _x.step)
+                {
+                    for (int y = _y.start; y > _y.stop; y += _y.step)
+                    {
+                        for (int z = _z.start; z > _z.stop; z += _z.step)
+                        {
+                            yield return new(x, y, z);
+                        }
+                    }
+                }
+            }
         }
 
         public static List<T> Shuffle<T>(this List<T> self)
@@ -380,19 +669,19 @@ namespace Ex
             string end = ")";
             string middle = "";
 
-            foreach ((int, T) e in Enumerate(self))
+            foreach ((int index, T value) in Enumerate(self))
             {
-                if (e.Item1 == 0)
+                if (index == 0)
                 {
-                    middle += $"{e.Item2}";
+                    middle += $"{value}";
                 }
                 else
                 {
-                    middle += $", {e.Item2}";
+                    middle += $", {value}";
                 }
             }
 
-            Debug.Show(start + middle + end);
+            (start + middle + end).Show();
         }
 
         public static void Look<T1, T2>(this List<T1> self, Func<T1, T2> func)
@@ -401,36 +690,78 @@ namespace Ex
             string end = ")";
             string middle = "";
 
-            foreach ((int, T1) e in Enumerate(self))
+            foreach ((int index, T1 value) in Enumerate(self))
             {
-                if (e.Item1 == 0)
+                if (index == 0)
                 {
-                    middle += $"{func(e.Item2)}";
+                    middle += $"{func(value)}";
                 }
                 else
                 {
-                    middle += $", {func(e.Item2)}";
+                    middle += $", {func(value)}";
                 }
             }
 
-            Debug.Show(start + middle + end);
+            (start + middle + end).Show();
         }
 
-        public static List<(T1, T2)> Zip<T1, T2>(List<T1> list1, List<T2> list2)
+        public static void Look<T>(this IEnumerable<T> self)
         {
-            List<(T1, T2)> ret = new();
-            int len = Mathf.Min(list1.Count, list2.Count);
-            foreach (int i in Range(len))
+            string start = "List(";
+            string end = ")";
+            string middle = "";
+
+            foreach ((int index, T value) in Enumerate(self))
             {
-                ret.Add((list1[i], list2[i]));
+                if (index == 0)
+                {
+                    middle += $"{value}";
+                }
+                else
+                {
+                    middle += $", {value}";
+                }
             }
 
-            return ret;
+            (start + middle + end).Show();
         }
 
-        public static uint Count(this List<bool> self, bool val)
+        public static void Look<T1, T2>(this IEnumerable<T1> self, Func<T1, T2> func)
         {
-            uint num = 0;
+            string start = "List(";
+            string end = ")";
+            string middle = "";
+
+            foreach ((int index, T1 value) in Enumerate(self))
+            {
+                if (index == 0)
+                {
+                    middle += $"{func(value)}";
+                }
+                else
+                {
+                    middle += $", {func(value)}";
+                }
+            }
+
+            (start + middle + end).Show();
+        }
+
+        public static IEnumerable<(T1 e1, T2 e2)> Zip<T1, T2>(IEnumerable<T1> collection1, IEnumerable<T2> collection2)
+        {
+            using (IEnumerator<T1> IEr1 = collection1.GetEnumerator())
+            using (IEnumerator<T2> IEr2 = collection2.GetEnumerator())
+            {
+                while (IEr1.MoveNext() && IEr2.MoveNext())
+                {
+                    yield return (IEr1.Current, IEr2.Current);
+                }
+            }
+        }
+
+        public static int Count(this IEnumerable<bool> self, bool val)
+        {
+            int num = 0;
 
             foreach (bool e in self)
             {
@@ -443,7 +774,7 @@ namespace Ex
             return num;
         }
 
-        public static bool All(List<bool> list)
+        public static bool All(IEnumerable<bool> list)
         {
             foreach (bool e in list)
             {
@@ -456,7 +787,7 @@ namespace Ex
             return true;
         }
 
-        public static bool Any(List<bool> list)
+        public static bool Any(IEnumerable<bool> list)
         {
             foreach (bool e in list)
             {
@@ -469,29 +800,23 @@ namespace Ex
             return false;
         }
 
-        public static List<T2> Make<T1, T2>(List<T1> collection, Func<T1, T2> func)
+        public static IEnumerable<T2> Make<T1, T2>(IEnumerable<T1> collection, Func<T1, T2> func)
         {
-            List<T2> ret = new();
             foreach (T1 e in collection)
             {
-                ret.Add(func(e));
+                yield return func(e);
             }
-
-            return ret;
         }
 
-        public static List<T2> Make<T1, T2>(List<T1> collection, Func<T1, bool> condition, Func<T1, T2> func)
+        public static IEnumerable<T2> Make<T1, T2>(IEnumerable<T1> collection, Func<T1, bool> condition, Func<T1, T2> func)
         {
-            List<T2> ret = new();
             foreach (T1 e in collection)
             {
                 if (condition(e))
                 {
-                    ret.Add(func(e));
+                    yield return func(e);
                 }
             }
-
-            return ret;
         }
 
         public static List<T> Set<T>(this List<T> self)
@@ -508,31 +833,27 @@ namespace Ex
             return ret;
         }
 
-        public static List<T2> Map<T1, T2>(List<T1> list, Func<T1, T2> func)
+        public static IEnumerable<T2> Map<T1, T2>(IEnumerable<T1> collection, Func<T1, T2> func)
         {
-            List<T2> ret = new();
-
-            foreach (T1 e in list)
+            foreach (T1 e in collection)
             {
-                ret.Add(func(e));
+                yield return func(e);
             }
-
-            return ret;
         }
 
-        public static void Map<T>(List<T> list, Action<T> act)
+        public static void Map<T>(IEnumerable<T> collection, Action<T> act)
         {
-            foreach (T e in list)
+            foreach (T e in collection)
             {
                 act(e);
             }
         }
 
-        public static (string, T) Find<T>(this List<(string, T)> self, string key)
+        public static (string key, T value) Find<T>(this List<(string key, T value)> self, string key)
         {
             for (int i = 0; i < self.Count; i++)
             {
-                if (self[i].Item1 == key)
+                if (self[i].key == key)
                 {
                     return self[i];
                 }
@@ -541,13 +862,13 @@ namespace Ex
         }
 
         /// <summary>Return true if the key was found.</summary>
-        public static bool Target<T>(this List<(string, T)> self, string key, Func<(string, T), (string, T)> funcIfFound, Action<string> actIfNotFound)
+        public static bool Target<T>(this List<(string key, T value)> self, string key, Func<(string key, T value), (string key, T value)> funcIfFound, Action<string> actIfNotFound)
         {
             for (int i = 0; i < self.Count; i++)
             {
-                if (self[i].Item1 == key)
+                if (self[i].key == key)
                 {
-                    self[i] = funcIfFound((self[i].Item1, self[i].Item2));
+                    self[i] = funcIfFound((self[i].key, self[i].value));
                     return true;
                 }
             }
@@ -585,56 +906,48 @@ namespace Ex
             return ret;
         }
 
-        public static List<T> Slice<T>(this List<T> self, int stop)
+        public static IEnumerable<T> Slice<T>(this List<T> self, int stop)
         {
-            List<T> ret = new();
             for (int i = 0; i < stop; i++)
             {
-                ret.Add(self[i]);
+                yield return self[i];
             }
-            return ret;
         }
 
-        public static List<T> Slice<T>(this List<T> self, int start, int stop)
+        public static IEnumerable<T> Slice<T>(this List<T> self, int start, int stop)
         {
-            List<T> ret = new();
             for (int i = start; i < stop; i++)
             {
-                ret.Add(self[i]);
+                yield return self[i];
             }
-            return ret;
         }
 
-        public static List<T> Slice<T>(this List<T> self, int start, int stop, int step)
+        public static IEnumerable<T> Slice<T>(this List<T> self, int start, int stop, int step)
         {
             if (step == 0) throw new Exception("InfinityLoop.");
 
-            List<T> ret = new();
             if (step > 0)
             {
                 for (int i = start; i < stop; i += step)
                 {
-                    ret.Add(self[i]);
+                    yield return self[i];
                 }
             }
             else
             {
                 for (int i = start; i > stop; i += step)
                 {
-                    ret.Add(self[i]);
+                    yield return self[i];
                 }
             }
-            return ret;
         }
 
-        public static List<T> Reversed<T>(this List<T> self)
+        public static IEnumerable<T> Reversed<T>(this List<T> self)
         {
-            List<T> ret = new();
             for (int i = self.Count - 1; i >= 0; i--)
             {
-                ret.Add(self[i]);
+                yield return self[i];
             }
-            return ret;
         }
 
         public static List<T> Sorted<T>(this List<T> self, bool isSmall2Big = true) where T : IComparable<T>
@@ -651,42 +964,42 @@ namespace Ex
             return copiedSelf;
         }
 
-        public static T At<T>(this T[,] self, Vector2Int pos)
+        public static T Where<T>(this T[,] self, Vector2Int pos)
         {
             return self[pos.x, pos.y];
         }
 
-        public static void To<T>(this T[,] self, Vector2Int pos, T val)
+        public static void Set<T>(this T[,] self, Vector2Int pos, T val)
         {
             self[pos.x, pos.y] = val;
         }
 
-        public static T At<T>(this T[,,] self, Vector3Int pos)
+        public static T Where<T>(this T[,,] self, Vector3Int pos)
         {
             return self[pos.x, pos.y, pos.z];
         }
 
-        public static void To<T>(this T[,,] self, Vector3Int pos, T val)
+        public static void Set<T>(this T[,,] self, Vector3Int pos, T val)
         {
             self[pos.x, pos.y, pos.z] = val;
         }
 
-        public static T At<T>(this T[,] self, Vector2Int pos, Vector2Int ofst)
+        public static T Where<T>(this T[,] self, Vector2Int pos, Vector2Int ofst)
         {
             return self[pos.x + ofst.x, pos.y + ofst.y];
         }
 
-        public static void To<T>(this T[,] self, Vector2Int pos, Vector2Int ofst, T val)
+        public static void Set<T>(this T[,] self, Vector2Int pos, Vector2Int ofst, T val)
         {
             self[pos.x + ofst.x, pos.y + ofst.y] = val;
         }
 
-        public static T At<T>(this T[,,] self, Vector3Int pos, Vector3Int ofst)
+        public static T Where<T>(this T[,,] self, Vector3Int pos, Vector3Int ofst)
         {
             return self[pos.x + ofst.x, pos.y + ofst.y, pos.z + ofst.z];
         }
 
-        public static void To<T>(this T[,,] self, Vector3Int pos, Vector3Int ofst, T val)
+        public static void Set<T>(this T[,,] self, Vector3Int pos, Vector3Int ofst, T val)
         {
             self[pos.x + ofst.x, pos.y + ofst.y, pos.z + ofst.z] = val;
         }
@@ -747,14 +1060,14 @@ namespace Ex
         public static List<GameObject> FindsTag(this string self)
         {
             GameObject[] objsArray = GameObject.FindGameObjectsWithTag(self);
-            List<GameObject> ret = new List<GameObject>(objsArray);
+            List<GameObject> ret = new(objsArray);
             return ret;
         }
 
         public static List<T> FindsTag<T>(this string self) where T : Component
         {
             GameObject[] objs = GameObject.FindGameObjectsWithTag(self);
-            List<T> ret = Collection.Make(new List<GameObject>(objs), (e) => e.GetComponent<T>());
+            List<T> ret = Collection.Make(new List<GameObject>(objs), (e) => e.GetComponent<T>()).ToList();
             return ret;
         }
 
@@ -779,14 +1092,19 @@ namespace Ex
 
     public static class Instance
     {
-        public static Transform GetGrandsChild(this Transform self, List<int> indices)
+        public static GameObject GetChild(this GameObject self, int index)
         {
-            Transform ret = self;
-            for (int i = 0; i < indices.Count; i++)
+            return self.transform.GetChild(index).gameObject;
+        }
+
+        public static GameObject GetGrandsChild(this GameObject self, params int[] indices)
+        {
+            Transform retTf = self.transform;
+            for (int i = 0; i < indices.Length; i++)
             {
-                ret = ret.GetChild(indices[i]);
+                retTf = retTf.GetChild(indices[i]);
             }
-            return ret;
+            return retTf.gameObject;
         }
 
         public static T GetChildComponent<T>(this GameObject self, int childIndex) where T : Component
@@ -794,9 +1112,9 @@ namespace Ex
             return self.transform.GetChild(childIndex).GetComponent<T>();
         }
 
-        public static T GetGrandsChildComponent<T>(this GameObject self, List<int> grandsChildIndices) where T : Component
+        public static T GetGrandsChildComponent<T>(this GameObject self, params int[] grandsChildIndices) where T : Component
         {
-            return self.transform.GetGrandsChild(grandsChildIndices).GetComponent<T>();
+            return self.GetGrandsChild(grandsChildIndices).GetComponent<T>();
         }
 
         public static T GC<T>(this GameObject self) where T : Component
@@ -809,7 +1127,7 @@ namespace Ex
             return self.GetChildComponent<T>(childIndex);
         }
 
-        public static T GGCC<T>(this GameObject self, List<int> grandsChildIndices) where T : Component
+        public static T GGCC<T>(this GameObject self, params int[] grandsChildIndices) where T : Component
         {
             return self.GetGrandsChildComponent<T>(grandsChildIndices);
         }
@@ -852,98 +1170,50 @@ namespace Ex
     {
         public static bool IsIn(this int val, int min, int max, bool isMinInclude = true, bool isMaxInclude = true)
         {
-            if (isMinInclude && isMaxInclude)
-            {
-                if (min <=val && val <= max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else if (!isMinInclude && isMaxInclude)
-            {
-                if (min < val && val <= max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else if (isMinInclude && !isMaxInclude)
-            {
-                if (min <= val && val < max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (min < val && val < max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            if (isMinInclude && isMaxInclude) return min <= val && val <= max;
+            else if (!isMinInclude && isMaxInclude) return min < val && val <= max;
+            else if (isMinInclude && !isMaxInclude) return min <= val && val < max;
+            else return min < val && val < max;
         }
 
         public static bool IsIn(this float val, float min, float max, bool isMinInclude = true, bool isMaxInclude = true)
         {
-            if (isMinInclude && isMaxInclude)
-            {
-                if (min <= val && val <= max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else if (!isMinInclude && isMaxInclude)
-            {
-                if (min < val && val <= max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else if (isMinInclude && !isMaxInclude)
-            {
-                if (min <= val && val < max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                if (min < val && val < max)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
+            if (isMinInclude && isMaxInclude) return min <= val && val <= max;
+            else if (!isMinInclude && isMaxInclude) return min < val && val <= max;
+            else if (isMinInclude && !isMaxInclude) return min <= val && val < max;
+            else return min < val && val < max;
+        }
+
+        public static bool IsIn(this Vector2Int val, int min, int max, bool isMinInclude = true, bool isMaxInclude = true)
+        {
+            if (isMinInclude && isMaxInclude) return (min <= val.x && val.x <= max) && (min <= val.y && val.y <= max);
+            else if (!isMinInclude && isMaxInclude) return (min < val.x && val.x <= max) && (min < val.y && val.y <= max);
+            else if (isMinInclude && !isMaxInclude) return (min <= val.x && val.x < max) && (min <= val.y && val.y < max);
+            else return (min < val.x && val.x < max) && (min < val.y && val.y < max);
+        }
+
+        public static bool IsIn(this Vector3Int val, int min, int max, bool isMinInclude = true, bool isMaxInclude = true)
+        {
+            if (isMinInclude && isMaxInclude) return (min <= val.x && val.x <= max) && (min <= val.y && val.y <= max) && (min <= val.z && val.z <= max);
+            else if (!isMinInclude && isMaxInclude) return (min < val.x && val.x <= max) && (min < val.y && val.y <= max) && (min < val.z && val.z <= max);
+            else if (isMinInclude && !isMaxInclude) return (min <= val.x && val.x < max) && (min <= val.y && val.y < max) && (min <= val.z && val.z < max);
+            else return (min < val.x && val.x < max) && (min < val.y && val.y < max) && (min < val.z && val.z < max);
+        }
+
+        public static bool IsIn(this Vector2 val, float min, float max, bool isMinInclude = true, bool isMaxInclude = true)
+        {
+            if (isMinInclude && isMaxInclude) return (min <= val.x && val.x <= max) && (min <= val.y && val.y <= max);
+            else if (!isMinInclude && isMaxInclude) return (min < val.x && val.x <= max) && (min < val.y && val.y <= max);
+            else if (isMinInclude && !isMaxInclude) return (min <= val.x && val.x < max) && (min <= val.y && val.y < max);
+            else return (min < val.x && val.x < max) && (min < val.y && val.y < max);
+        }
+
+        public static bool IsIn(this Vector3 val, float min, float max, bool isMinInclude = true, bool isMaxInclude = true)
+        {
+            if (isMinInclude && isMaxInclude) return (min <= val.x && val.x <= max) && (min <= val.y && val.y <= max) && (min <= val.z && val.z <= max);
+            else if (!isMinInclude && isMaxInclude) return (min < val.x && val.x <= max) && (min < val.y && val.y <= max) && (min < val.z && val.z <= max);
+            else if (isMinInclude && !isMaxInclude) return (min <= val.x && val.x < max) && (min <= val.y && val.y < max) && (min <= val.z && val.z < max);
+            else return (min < val.x && val.x < max) && (min < val.y && val.y < max) && (min < val.z && val.z < max);
         }
     }
 

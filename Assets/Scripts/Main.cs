@@ -2,70 +2,63 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Ex;
-using UnityEngine.UI;
-using Unity.VisualScripting;
+using TMPro;
+using Math = Ex.Math;
 
 public class Main : MonoBehaviour
 {
-    public Toggle IsBlack;
-    public Slider X, Y, Z;
+    public GameObject[] Prfbs;
+    public TMP_InputField PlayerInput;
 
     // Must be even.
-    static readonly int boardSize = 8;
+    static readonly int fieldSize = 8;
 
     // 0:nothing, 1:black, 2:white. [0, 0, 0] ~ [7, 7, 7].
-    int[,,] field = new int[boardSize, boardSize, boardSize];
-
-    // (3, 3, 3).
-    Vector3Int c = new(boardSize / 2 - 1, boardSize / 2 - 1, boardSize / 2 - 1);
+    GameObject[,,] fieldObj = new GameObject[fieldSize, fieldSize, fieldSize];
+    int[,,] field = new int[fieldSize, fieldSize, fieldSize];
+    bool isBlackTurn = true;
 
     void Start()
     {
         // Set up the field.
-        field.To(c, new(0, 0, 0), 1);
-        field.To(c, new(1, 0, 0), 2);
-        field.To(c, new(0, 0, 1), 2);
-        field.To(c, new(1, 0, 1), 1);
-        field.To(c, new(0, 1, 0), 2);
-        field.To(c, new(1, 1, 0), 1);
-        field.To(c, new(0, 1, 1), 1);
-        field.To(c, new(1, 1, 1), 2);
-        Display(field, boardSize);
+        foreach (Vector3Int e in Collection.Enumerate(fieldSize, fieldSize, fieldSize))
+        {
+            fieldObj.Set(e, gameObject.GetGrandsChild(0, e.z, e.y, e.x));
+        }
+        Vector3Int cnt = Vector3Int.one * (fieldSize / 2 - 1);
+        Collection.Map(Collection.Enumerate(2, 2, 2), (e) => field.Set(cnt, e, e.Sum() % 2 == 0 ? 1 : 2));
+
+        Display(fieldObj, field, fieldSize);
     }
 
     void Update()
     {
+        // Get the player's input.
         if (KeyCode.Return.Down())
         {
-            Vector3Int pos = new((int)X.value, (int)Y.value, (int)Z.value);
-            Put(field, boardSize, pos, IsBlack.isOn ? 1 : 2);
-            $">> ({pos.x}, {pos.y}, {pos.z})".Show();
-            Display(field, boardSize);
+            int inputNum = int.Parse(PlayerInput.text);
+            (int x, int _y) = Math.DivMod(inputNum, 100);
+            (int y, int z) = Math.DivMod(_y, 10);
+            Put(field, fieldSize, new Vector3Int(x, y, z).Clamp(0, fieldSize - 1), isBlackTurn ? 1 : 2);
+            Display(fieldObj, field, fieldSize);
+
+            isBlackTurn = !isBlackTurn;
+            PlayerInput.text = "";
         }
     }
 
     // 1:black, 2:white.
     void Put(int[,,] f, int size, Vector3Int p, int col)
     {
-        if (f.At(p) != 0) return;
-        else f.To(p, col);
+        if (col == 0) throw new System.Exception("Invalid color.");
 
-        foreach (int _x in Collection.Range(p.x - 1, p.x + 2))
+        if (f.Where(p) != 0) return;
+        else f.Set(p, col);
+
+        foreach (Vector3Int _e in Collection.Enumerate((-1, 2), (-1, 2), (-1, 2)))
         {
-            foreach (int _y in Collection.Range(p.y - 1, p.y + 2))
-            {
-                foreach (int _z in Collection.Range(p.z - 1, p.z + 2))
-                {
-                    int x = _x.Clamp(0, size - 1);
-                    int y = _y.Clamp(0, size - 1);
-                    int z = _z.Clamp(0, size - 1);
-                    if (!(x == p.x && y == p.y && z == p.z))
-                    {
-                        if (col == 0) continue;
-                        if (f[x, y, z] == RevCol(col)) Rev(f, size, p, col, new Vector3Int(x - p.x, y - p.y, z - p.z));
-                    }
-                }
-            }
+            Vector3Int e = (p + _e).Clamp(0, size - 1);
+            if (e != p && f.Where(e) == RevCol(col)) Rev(f, size, p, col, e - p);
         }
     }
 
@@ -73,52 +66,28 @@ public class Main : MonoBehaviour
     {
         List<Vector3Int> revPosMemo = new();
 
-        for (int i = 0; i < size; i++, p.x += dir.x, p.y += dir.y, p.z += dir.z)
+        for (int i = 0; i < size; i++, p += dir)
         {
             // On 0th loop, p is the put position.
             if (i == 0) continue;
 
-            // Cannot reverse.
-            if (i == 1 && col != 0 && f.At(p) == RevCol(col)) return;
-
             // Reached the edge.
-            if (p.x.IsIn(0, size - 1) || p.y.IsIn(0, size - 1) || p.z.IsIn(0, size - 1)) break;
+            if (!p.IsIn(0, size - 1)) break;
 
-            if (f.At(p) == RevCol(col)) revPosMemo.Add(new(p.x, p.y, p.z));
-            else if (f.At(p) == col) Collection.Map(revPosMemo, (e) => f.To(e, col));
+            if (f.Where(p) == RevCol(col)) revPosMemo.Add(new(p.x, p.y, p.z));
+            else if (f.Where(p) == col) Collection.Map(revPosMemo, (e) => f.Set(e, col));
             else return;
         }
     }
 
-    void Display(int[,,] f, int size)
+    void Display(GameObject[,,] fieldObj, int[,,] field, int size)
     {
-        "##################################################".Show();
-        foreach (int x in Collection.Range(size))
+        foreach (Vector3Int e in Collection.Enumerate(size, size, size))
         {
-            string s = "";
-            foreach (int y in Collection.Range(size))
-            {
-                foreach (int z in Collection.Range(size))
-                {
-                    int v = f[x, y, z];
-                    if (v == 0)
-                    {
-                        s += $"({x},{y},{z}):<color=green>{v}</color>, ";
-                    }
-                    else if (v == 1)
-                    {
-                        s += $"({x},{y},{z}):<color=red>{v}</color>, ";
-                    }
-                    else if (v == 2)
-                    {
-                        s += $"({x},{y},{z}):<color=blue>{v}</color>, ";
-                    }
-                }
-                s += "\n";
-            }
-            s.Show();
+            Transform parent = fieldObj.Where(e).transform.parent;
+            Destroy(fieldObj.Where(e));
+            fieldObj.Set(e, Instantiate(Prfbs[field.Where(e)], e, Quaternion.identity, parent));
         }
-        "##################################################".Show();
     }
 
     int RevCol(int col)
